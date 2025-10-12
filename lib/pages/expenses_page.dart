@@ -124,10 +124,18 @@ class ExpensesPage extends StatelessWidget {
                 },
               ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: const Text('Add Expense'),
-        onPressed: () => _openAddDialog(context),
+      floatingActionButton: ScaleTransition(
+        scale: CurvedAnimation(
+          parent: const AlwaysStoppedAnimation(1.0),
+          curve: Curves.easeOut,
+        ),
+        child: FloatingActionButton.extended(
+          icon: const Icon(Icons.add),
+          label: const Text('Add Expense'),
+          onPressed: () => _openAddDialog(context),
+          elevation: 4,
+          heroTag: 'add_expense_fab',
+        ),
       ),
     );
   }
@@ -135,122 +143,171 @@ class ExpensesPage extends StatelessWidget {
   Widget _buildExpenseCard(BuildContext context, Expense e) {
     final categoryColor = AppTheme.getCategoryColor(e.category);
     
-    return Dismissible(
-      key: ValueKey(e.id),
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.only(left: 20),
-        alignment: Alignment.centerLeft,
-        decoration: BoxDecoration(
-          color: AppTheme.errorColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorColor),
-      ),
-      secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.only(right: 20),
-        alignment: Alignment.centerRight,
-        decoration: BoxDecoration(
-          color: AppTheme.errorColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorColor),
-      ),
-      onDismissed: (_) => onDelete(e),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: categoryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              AppTheme.getCategoryIcon(e.category),
-              color: categoryColor,
-              size: 24,
-            ),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 1500),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
           ),
-          title: Text(
-            e.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+        );
+      },
+      child: Dismissible(
+        key: ValueKey(e.id),
+        background: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(left: 20),
+          alignment: Alignment.centerLeft,
+          decoration: BoxDecoration(
+            color: AppTheme.errorColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
           ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
+          child: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorColor),
+        ),
+        secondaryBackground: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.only(right: 20),
+          alignment: Alignment.centerRight,
+          decoration: BoxDecoration(
+            color: AppTheme.errorColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorColor),
+        ),
+        confirmDismiss: (_) => _showDeleteConfirmation(context, e),
+        onDismissed: (_) => onDelete(e),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
+                // Leading Icon
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                    color: categoryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    e.category,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: categoryColor,
-                    ),
+                  child: Icon(
+                    AppTheme.getCategoryIcon(e.category),
+                    color: categoryColor,
+                    size: 24,
                   ),
                 ),
-                if (e.shares.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Icon(Icons.people_alt_rounded, size: 14, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${e.shares.length}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                const SizedBox(width: 12),
+                // Title and Subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        e.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: categoryColor.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              e.category,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: categoryColor,
+                              ),
+                            ),
+                          ),
+                          if (e.shares.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Icon(Icons.people_alt_rounded, size: 14, color: Colors.grey[600]),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${e.shares.length}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ],
-            ),
-          ),
-          trailing: SizedBox(
-            width: 100,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '₹${e.amount.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                InkWell(
-                  onTap: () => _openAddDialog(context, existing: e),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      size: 16,
-                      color: AppTheme.primaryColor,
+                // Trailing Section
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '₹${e.amount.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () => _openAddDialog(context, existing: e),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.edit_outlined,
+                              size: 15,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        InkWell(
+                          onTap: () async {
+                            final confirmed = await _showDeleteConfirmation(context, e);
+                            if (confirmed == true) {
+                              onDelete(e);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 15,
+                              color: AppTheme.errorColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -274,6 +331,63 @@ class ExpensesPage extends StatelessWidget {
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       return '${date.day} ${months[date.month - 1]}, ${date.year}';
     }
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context, Expense e) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppTheme.errorColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Delete Expense',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete "${e.title}"? This action cannot be undone.',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop(true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${e.title} deleted'),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ---------- Add / Edit dialog ----------
