@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "536394141801",
+    "project_id": "madd-23463",
+    "storage_bucket": "madd-23463.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:536394141801:android:2a4a64db64d416ba4c92f8",
+        "android_client_info": {
+          "package_name": "com.example.finance_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8YsE3aReLeywRTZtaX9vlJnYa8PL1nFk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
